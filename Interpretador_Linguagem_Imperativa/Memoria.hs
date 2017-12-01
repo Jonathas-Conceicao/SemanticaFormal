@@ -1,5 +1,5 @@
 module Memoria
-  ( Memoria
+  ( Memoria(..)
   , adicionaVar
   , procuraVar
   , alteraVar
@@ -9,6 +9,9 @@ module Memoria
 type Variaveis = [(String, Int)]
 
 data Memoria a = Memoria (Variaveis -> (a, Variaveis))
+
+instance (Show a) => Show (Memoria a) where
+  show (Memoria p) = show $ (p [])
 
 instance Functor Memoria where
   fmap f m = do
