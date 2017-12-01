@@ -1,4 +1,10 @@
-module Estado where
+module Memoria
+  ( Memoria
+  , adicionaVar
+  , procuraVar
+  , alteraVar
+  , evalProgram
+  ) where
 
 type Variaveis = [(String, Int)]
 
@@ -28,34 +34,35 @@ getVar = Memoria $ \s -> (s, s)
 putVar :: Variaveis -> Memoria ()
 putVar s = Memoria $ \ _ -> ((), s)
 
-adiciona :: Memoria a -> String -> Int -> Memoria ()
-adiciona m s x = do
+evalProgram :: Memoria a -> Variaveis -> a
+evalProgram (Memoria p) mem = fst $ p mem
+
+adicionaVar :: String -> Int -> Memoria ()
+adicionaVar s x = do
   vs <- getVar
   putVar ((s,x):vs)
 
--- findVar :: Variaveis -> String ->
-
-encontraVar :: Variaveis -> String -> Int
-encontraVar [] s = error ("Variavel " ++ s ++ " nao definida no estado")
-encontraVar ((s,i):xs) v
-  | s == v     = i
-  | otherwise  = encontraVar xs v
-
 procuraVar :: String -> Memoria Int
 procuraVar s = do
-  var <- getVar
-  let x = encontraVar var s
+  vars <- getVar
+  let x = procuraVarAux vars s
   return x
+
+procuraVarAux :: Variaveis -> String -> Int
+procuraVarAux [] s = error ("Variavel " ++ s ++ " nao definida no estado")
+procuraVarAux ((s,i):xs) v
+  | s == v     = i
+  | otherwise  = procuraVarAux xs v
 
 alteraVar :: String -> Int -> Memoria ()
 alteraVar s i = do
-  var <- getVar
-  let newM = mudaVar var s i
+  vars <- getVar
+  let newM = alteraVarAux vars s i
   putVar newM
   return ()
 
-mudaVar :: Variaveis -> String -> Int -> Variaveis
-mudaVar [] v n = error ("Variavel " ++ v ++ " nao definida no estado")
-mudaVar ((s,i):xs) v n
+alteraVarAux :: Variaveis -> String -> Int -> Variaveis
+alteraVarAux [] v n = error ("Variavel " ++ v ++ " nao definida no estado")
+alteraVarAux ((s,i):xs) v n
   | s == v     = ((s,n):xs)
-  | otherwise  = (s,i): mudaVar xs v n
+  | otherwise  = (s,i): alteraVarAux xs v n
