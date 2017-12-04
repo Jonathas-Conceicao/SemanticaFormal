@@ -22,6 +22,7 @@ data CExp = Skip
           | Seq   CExp CExp
           | Atrib AExp AExp
           | If    BExp CExp CExp
+          | While BExp CExp
           deriving (Show, Eq)
 
 aBigStep :: AExp -> Memoria (Int)
@@ -43,8 +44,9 @@ aBigStep (Mult e1 e2) = do
 bBigStep :: BExp -> Memoria (Bool)
 bBigStep TRUE  = return (True)
 bBigStep FALSE = return (False)
-bBigStep (Not TRUE)  = return (False)
-bBigStep (Not FALSE) = return (True)
+bBigStep (Not b)     = do
+  x <- bBigStep b
+  return (not x)
 bBigStep (And b1 b2) = do
   x <- bBigStep b1
   y <- bBigStep b2
@@ -56,7 +58,7 @@ bBigStep (Or  b1 b2) = do
 bBigStep (Leq a1 a2) = do
   x <- aBigStep a1
   y <- aBigStep a2
-  return (x >= y)
+  return (x <= y)
 bBigStep (Eq  a1 a2) = do
   x <- aBigStep a1
   y <- aBigStep a2
@@ -66,7 +68,7 @@ cBigStep :: CExp -> Memoria (CExp)
 cBigStep Skip              = return Skip
 cBigStep (Atrib (Var s) a) = do
   x <- aBigStep a
-  adicionaVar s x
+  alteraVar s x
   return Skip
 cBigStep (Seq c1 c2) = do
   cBigStep c1
@@ -81,8 +83,24 @@ cBigStep (If b c1 c2) = do
     False -> do
       cBigStep c2
       return Skip
+cBigStep (While b c) = do
+  x <- bBigStep b
+  case x of
+    True  -> do
+      cBigStep c
+      cBigStep (While b c)
+    False -> do
+      return Skip
 
 prog1 :: CExp
 prog1 = Seq (Atrib (Var "x") (Num 3))
             (Seq (Atrib (Var "y") (Num 2))
                  (Atrib (Var "z") (Som (Var "x") (Var "y")) ))
+prog2 :: CExp
+prog2 = Seq (Atrib (Var "i") (Num 5))
+            (While (Not (Eq (Var "i") (Num 0)))
+                   (Atrib (Var "i") (Sub (Var "i") (Num 1))))
+
+prog3 :: CExp
+prog3 = Seq (Atrib (Var "i") (Num 0))
+            (Atrib (Var "i") (Som (Var "i") (Num 1)))

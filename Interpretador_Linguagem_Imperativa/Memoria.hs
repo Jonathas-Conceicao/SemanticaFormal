@@ -37,8 +37,8 @@ getVar = Memoria $ \s -> (s, s)
 putVar :: Variaveis -> Memoria ()
 putVar s = Memoria $ \ _ -> ((), s)
 
-evalProgram :: Memoria a -> Variaveis -> a
-evalProgram (Memoria p) mem = fst $ p mem
+evalProgram :: Memoria a -> Variaveis -> (a, Variaveis)
+evalProgram (Memoria p) mem = p mem
 
 adicionaVar :: String -> Int -> Memoria ()
 adicionaVar s x = do
