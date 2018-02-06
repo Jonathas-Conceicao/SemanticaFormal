@@ -68,8 +68,8 @@ cSmallStep (Catch Throw c,  s)        = (c, s)
 cSmallStep (Catch c1    c2, s)        = (Catch cn c2, sn) where (cn, sn) = cSmallStep (c1, s)
 cSmallStep (While b c, s)             = (If b (Seq c (While b c)) (Skip), s)
 
--- iTipo :: [(AExp, Tipo)] -> CExp -> Tipo
--- iTipo 
+iTipo :: [(AExp, Tipo)] -> CExp -> Tipo
+iTipo = error "To do implement iTipo"
 
 meuEstado :: Estado
 meuEstado = [("x",3), ("y",0), ("z",0)]
