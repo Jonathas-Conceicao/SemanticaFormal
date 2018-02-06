@@ -1,6 +1,6 @@
 module Estado where
 
-type Estado = [(String,Int)]
+type Estado = [(String, Int)]
 
 adiciona :: Estado -> String -> Int -> Estado
 adiciona e s i = (s,i):e

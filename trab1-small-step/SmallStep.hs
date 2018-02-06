@@ -1,29 +1,5 @@
 import Estado
-
-data AExp
-  = Num Int
-  | Var String
-  | Som AExp AExp
-  | Sub AExp AExp
-  | Mul AExp AExp
-  deriving(Show)
-
-data BExp
-  = TRUE
-  | FALSE
-  | Not BExp
-  | And BExp BExp
-  | Or  BExp BExp
-  | Ig  AExp AExp
-  deriving(Show)
-
-data CExp
-  = While BExp CExp
-  | If BExp CExp CExp
-  | Seq CExp CExp
-  | Atrib AExp AExp
-  | Skip
-  deriving(Show)
+import Tipo
 
 interpretA :: (AExp, Estado) -> (AExp, Estado)
 interpretA (a, s) = if isFinalA a then (a, s) else interpretA (aSmallStep (a, s))
@@ -84,9 +60,11 @@ cSmallStep (If FALSE c1 c2, s)        = (c2, s)
 cSmallStep (If b     c1 c2, s)        = (If bn c1 c2, s) where (bn, _) = bSmallStep (b, s)
 cSmallStep (While b c, s)             = (If b (Seq c (While b c)) (Skip), s)
 
+-- iTipo :: [(AExp, Tipo)] -> CExp -> Tipo
+-- iTipo 
+
 meuEstado :: Estado
 meuEstado = [("x",3), ("y",0), ("z",0)]
-
 
 exemplo :: AExp
 exemplo = Som (Num 3) (Som (Var "x") (Var "y"))
@@ -97,7 +75,7 @@ exemplo = Som (Num 3) (Som (Var "x") (Var "y"))
 exemplo2 :: BExp
 exemplo2 = And (And TRUE (Not FALSE)) (And (Not (Not TRUE)) TRUE)
 
--- *Main> interpretB (exemplo2,meuEstado)
+-- Main> interpretB (exemplo2,meuEstado)
 -- (TRUE,[("x",3),("y",0),("z",0)])
 
 exemplo3 :: CExp
