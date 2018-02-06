@@ -29,18 +29,21 @@ isFinalB FALSE = True
 isFinalB x = False
 
 bSmallStep :: (BExp,Estado) -> (BExp,Estado)
-bSmallStep (Not FALSE, s)          = (TRUE, s)
-bSmallStep (Not TRUE,  s)          = (FALSE, s)
-bSmallStep (Not b, s)              = (Not bn, s) where (bn, _) = bSmallStep (b, s)
-bSmallStep (And TRUE  b2, s)       = (b2, s)
-bSmallStep (And FALSE b2, s)       = (FALSE, s)
-bSmallStep (And b1 b2, s)          = (And bn b2, s) where (bn, _) = bSmallStep (b1, s)
-bSmallStep (Or FALSE b2, s)        = (b2, s)
-bSmallStep (Or TRUE  b2, s)        = (TRUE, s)
-bSmallStep (Or b1 b2, s)           = (Or  bn b2, s) where (bn, _) = bSmallStep (b1, s)
-bSmallStep (Ig (Num x) (Num y), s) = (if x == y then TRUE else FALSE, s)
-bSmallStep (Ig (Num x) b, s)       = (Ig (Num x) bn, s) where (bn, _) = aSmallStep (b, s)
-bSmallStep (Ig b1      b2, s)      = (Ig bn b2, s) where (bn, _) = aSmallStep (b1, s)
+bSmallStep (Not FALSE, s)           = (TRUE, s)
+bSmallStep (Not TRUE,  s)           = (FALSE, s)
+bSmallStep (Not b, s)               = (Not bn, s) where (bn, _) = bSmallStep (b, s)
+bSmallStep (And TRUE  b2, s)        = (b2, s)
+bSmallStep (And FALSE b2, s)        = (FALSE, s)
+bSmallStep (And b1 b2, s)           = (And bn b2, s) where (bn, _) = bSmallStep (b1, s)
+bSmallStep (Or FALSE b2, s)         = (b2, s)
+bSmallStep (Or TRUE  b2, s)         = (TRUE, s)
+bSmallStep (Or b1 b2, s)            = (Or  bn b2, s) where (bn, _) = bSmallStep (b1, s)
+bSmallStep (Ig (Num x) (Num y), s)  = (if x == y then TRUE else FALSE, s)
+bSmallStep (Ig (Num x) b, s)        = (Ig (Num x) bn, s) where (bn, _) = aSmallStep (b, s)
+bSmallStep (Ig b1      b2, s)       = (Ig bn b2, s) where (bn, _) = aSmallStep (b1, s)
+bSmallStep (Leq (Num x) (Num y), s) = (if x <= y then TRUE else FALSE, s)
+bSmallStep (Leq (Num x) b, s)       = (Leq (Num x) bn, s) where (bn, _) = aSmallStep (b, s)
+bSmallStep (Leq b1      b2, s)      = (Leq bn b2, s) where (bn, _) = aSmallStep (b1, s)
 
 
 interpretC :: (CExp, Estado) -> (CExp, Estado)
@@ -70,6 +73,29 @@ cSmallStep (While b c, s)             = (If b (Seq c (While b c)) (Skip), s)
 
 meuEstado :: Estado
 meuEstado = [("x",3), ("y",0), ("z",0)]
+
+exemploException1 :: CExp
+exemploException1 = (While (Leq (Var "x") (Num 100))
+                           (Seq (If (Ig (Var "x") (Num 3)) Throw Skip)
+                                (Atrib (Var "x") (Mul (Var "x") (Var "x")))
+                           )
+                    )
+
+exemploException2 :: CExp
+exemploException2 = (Catch (Atrib (Var "x") (Num 0))
+                           (Atrib (Var "x") (Num 1))
+                    )
+
+exemploException3 :: CExp
+exemploException3 = (Seq (Atrib (Var "x") (Num 0))
+                         (Catch (While (Leq (Var "x") (Num 27))
+                                       (Seq (If (Ig (Var "x") (Num 0)) Throw Skip)
+                                            (Atrib (Var "x") (Mul (Var "x") (Var "x")))
+                                       )
+                                )
+                                ((Atrib (Var "x") (Num (-1))))
+                         )
+                    )
 
 exemplo :: AExp
 exemplo = Som (Num 3) (Som (Var "x") (Var "y"))

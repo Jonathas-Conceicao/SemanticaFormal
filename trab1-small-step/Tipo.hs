@@ -17,6 +17,7 @@ data BExp
   | And BExp BExp
   | Or  BExp BExp
   | Ig  AExp AExp
+  | Leq AExp AExp
   deriving (Eq, Show)
 
 data CExp
