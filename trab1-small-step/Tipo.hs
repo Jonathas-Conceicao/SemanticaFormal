@@ -24,6 +24,8 @@ data CExp
   | If BExp CExp CExp
   | Seq CExp CExp
   | Atrib AExp AExp
+  | Catch CExp CExp
+  | Throw
   | Skip
   deriving (Eq, Show)
 

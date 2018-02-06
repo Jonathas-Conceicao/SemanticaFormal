@@ -47,17 +47,22 @@ interpretC :: (CExp, Estado) -> (CExp, Estado)
 interpretC (c, s) = if isFinalC c then (c, s) else interpretC (cSmallStep (c, s))
 
 isFinalC :: CExp -> Bool
-isFinalC Skip = True
-isFinalC x    = False
+isFinalC Throw = True
+isFinalC Skip  = True
+isFinalC x     = False
 
 cSmallStep :: (CExp, Estado) -> (CExp, Estado)
 cSmallStep (Atrib (Var v) (Num x), s) = (Skip, ns) where ns = mudaVar s v x
 cSmallStep (Atrib (Var v) a, s)       = (Atrib (Var v) an, s) where (an, _) = aSmallStep (a, s)
-cSmallStep (Seq Skip c, s)            = (c, s)
-cSmallStep (Seq c1  c2, s)            = (Seq cn c2, sn) where (cn, sn) = cSmallStep (c1, s)
+cSmallStep (Seq Skip  c,  s)          = (c, s)
+cSmallStep (Seq Throw c,  s)          = (Throw, s)
+cSmallStep (Seq c1    c2, s)          = (Seq cn c2, sn) where (cn, sn) = cSmallStep (c1, s)
 cSmallStep (If TRUE  c1 c2, s)        = (c1, s)
 cSmallStep (If FALSE c1 c2, s)        = (c2, s)
 cSmallStep (If b     c1 c2, s)        = (If bn c1 c2, s) where (bn, _) = bSmallStep (b, s)
+cSmallStep (Catch Skip  c,  s)        = (Skip, s)
+cSmallStep (Catch Throw c,  s)        = (c, s)
+cSmallStep (Catch c1    c2, s)        = (Catch cn c2, sn) where (cn, sn) = cSmallStep (c1, s)
 cSmallStep (While b c, s)             = (If b (Seq c (While b c)) (Skip), s)
 
 -- iTipo :: [(AExp, Tipo)] -> CExp -> Tipo
