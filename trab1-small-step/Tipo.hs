@@ -100,7 +100,7 @@ iTipo' arg@(Mul e1 e2) = case e1t of
     e1t = iTipo' e1
     e2t = iTipo' e2
 iTipo' arg@(Not e1) = case e1t of
-  S BOOL -> BOOL
+  S BOOL -> S BOOL
   E s -> E $ naExpressao s arg
   otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
   where
@@ -142,16 +142,6 @@ iTipo' arg@(Leq e1 e2) = case e1t of
     otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
   E s -> E $ naExpressao s arg
   otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Seq e1 e2) = case e1t of
-  S VOID -> case e2t of
-    S VOID -> S VOID
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S VOID) e1t arg
   where
     e1t = iTipo' e1
     e2t = iTipo' e2
