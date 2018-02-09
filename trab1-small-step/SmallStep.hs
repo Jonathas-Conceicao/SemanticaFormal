@@ -88,3 +88,6 @@ exemploB = And (And TRUE (Not FALSE)) (And (Not (Not TRUE)) TRUE)
 exemploC :: Exp
 exemploC = (While (Not (Ig (Var "x") (Num 0)))
                   (Atrib (Var "x") (Sub (Var "x") (Num 1))))
+
+exemploErroTipo1 :: Exp
+exemploErroTipo1 = (While (Var "x") (Atrib (Var "x") (Sub (Var "x") (Num 1))))
