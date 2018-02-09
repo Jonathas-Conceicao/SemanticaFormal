@@ -2,11 +2,7 @@ import Estado
 import Tipo
 
 interpretA :: (Exp, Estado) -> (Exp, Estado)
-interpretA (a, s) = if isFinalA a then (a, s) else interpretA (aSmallStep (a, s))
-
-isFinalA :: Exp -> Bool
-isFinalA (Num a) = True
-isFinalA x = False
+interpretA (a, s) = if isFinal a then (a, s) else interpretA (aSmallStep (a, s))
 
 aSmallStep :: (Exp, Estado) -> (Exp, Estado)
 aSmallStep (Var x, s)               = (Num (procuraVar s x), s)
@@ -21,12 +17,7 @@ aSmallStep (Mul (Num x) e2, s)      = (Mul (Num x) ef, s) where (ef, _) = aSmall
 aSmallStep (Mul e1 e2, s)           = (Mul ef e2, s) where (ef, _) = aSmallStep (e1, s)
 
 interpretB :: (Exp,Estado) -> (Exp,Estado)
-interpretB (b, s) = if isFinalB b then (b, s) else interpretB (bSmallStep (b, s))
-
-isFinalB :: Exp -> Bool
-isFinalB TRUE  = True
-isFinalB FALSE = True
-isFinalB x = False
+interpretB (b, s) = if isFinal b then (b, s) else interpretB (bSmallStep (b, s))
 
 bSmallStep :: (Exp,Estado) -> (Exp,Estado)
 bSmallStep (Not FALSE, s)           = (TRUE, s)
@@ -45,14 +36,8 @@ bSmallStep (Leq (Num x) (Num y), s) = (if x <= y then TRUE else FALSE, s)
 bSmallStep (Leq (Num x) b, s)       = (Leq (Num x) bn, s) where (bn, _) = aSmallStep (b, s)
 bSmallStep (Leq b1      b2, s)      = (Leq bn b2, s) where (bn, _) = aSmallStep (b1, s)
 
-
 interpretC :: (Exp, Estado) -> (Exp, Estado)
-interpretC (c, s) = if isFinalC c then (c, s) else interpretC (cSmallStep (c, s))
-
-isFinalC :: Exp -> Bool
-isFinalC Throw = True
-isFinalC Skip  = True
-isFinalC x     = False
+interpretC (c, s) = if isFinal c then (c, s) else interpretC (cSmallStep (c, s))
 
 cSmallStep :: (Exp, Estado) -> (Exp, Estado)
 cSmallStep (Atrib (Var v) (Num x), s) = (Skip, ns) where ns = mudaVar s v x
@@ -67,9 +52,6 @@ cSmallStep (Catch Skip  c,  s)        = (Skip, s)
 cSmallStep (Catch Throw c,  s)        = (c, s)
 cSmallStep (Catch c1    c2, s)        = (Catch cn c2, sn) where (cn, sn) = cSmallStep (c1, s)
 cSmallStep (While b c, s)             = (If b (Seq c (While b c)) (Skip), s)
-
-iTipo :: Exp -> Tipo
-iTipo = error "To do implement iTipo"
 
 meuEstado :: Estado
 meuEstado = [("x",3), ("y",0), ("z",0)]
