@@ -1,5 +1,7 @@
 module Tipo where
 
+import Data.List as List
+
 data Exp
   = Num Int
   | Var String
@@ -24,6 +26,22 @@ data Exp
   | If Exp Exp Exp
   deriving (Eq, Show)
 
+getArgs :: Exp -> [Exp]
+getArgs (Not e) = [e]
+getArgs (Som e1 e2) = [e1, e2]
+getArgs (Sub e1 e2) = [e1, e2]
+getArgs (Mul e1 e2) = [e1, e2]
+getArgs (And e1 e2) = [e1, e2]
+getArgs (Or  e1 e2) = [e1, e2]
+getArgs (Ig  e1 e2) = [e1, e2]
+getArgs (Leq e1 e2) = [e1, e2]
+getArgs (Seq e1 e2) = [e1, e2]
+getArgs (Atrib e1 e2) = [e1, e2]
+getArgs (Catch e1 e2) = [e1, e2]
+getArgs (While e1 e2) = [e1, e2]
+getArgs (If e1 e2 e3) = [e1, e2, e3]
+getArgs a = []
+
 data Tipo
   = VOID
   | BOOL
@@ -40,6 +58,13 @@ instance Show Tipo' where
 getTipo :: Tipo' -> Tipo
 getTipo (S t) = t
 getTipo (E s) = errorWithoutStackTrace s
+
+isError :: Tipo' -> Bool
+isError (E _) = True
+isError (S _) = False
+
+getError :: Tipo' -> String
+getError (E s) = s
 
 isFinal :: Exp -> Bool
 isFinal (Num a) = True
@@ -69,133 +94,26 @@ iTipo' TRUE    = S BOOL
 iTipo' FALSE   = S BOOL
 iTipo' Skip    = S VOID
 iTipo' Throw   = S VOID
-iTipo' arg@(Som e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S INT
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
+iTipo' exp@(Som _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S INT]
+iTipo' exp@(Sub _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S INT]
+iTipo' exp@(Mul _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S INT]
+iTipo' exp@(Not  _ ) = testarTipos exp (getArgs exp) [S BOOL, S BOOL]
+iTipo' exp@(And _ _) = testarTipos exp (getArgs exp) [S BOOL, S BOOL, S BOOL]
+iTipo' exp@(Or  _ _) = testarTipos exp (getArgs exp) [S BOOL, S BOOL, S BOOL]
+iTipo' exp@(Ig  _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S BOOL]
+iTipo' exp@(Leq _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S BOOL]
+iTipo' exp@(Seq _ _) = testarTipos exp (getArgs exp) [S VOID, S VOID, S VOID]
+iTipo' exp@(Atrib _ _) = testarTipos exp (getArgs exp) [S INT, S INT, S VOID]
+iTipo' exp@(Catch _ _) = testarTipos exp (getArgs exp) [S VOID, S VOID, S VOID]
+iTipo' exp@(While _ _) = testarTipos exp (getArgs exp) [S BOOL, S VOID, S VOID]
+iTipo' exp@(If  _ _ _) = testarTipos exp (getArgs exp) [S BOOL, S VOID, S VOID, S VOID]
+
+testarTipos :: Exp -> [Exp] -> [Tipo'] -> Tipo'
+testarTipos exp [] (t:ts) = t
+testarTipos exp (e:es) (t:ts)
+  | te == t      = testarTipos exp es ts
+  | isError te   = E $ naExpressao (getError te) exp
+  | otherwise    = E $ erroDeTipo e t te exp
   where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Sub e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S INT
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Mul e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S INT
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Not e1) = case e1t of
-  S BOOL -> S BOOL
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
-  where
-    e1t = iTipo' e1
-iTipo' arg@(And e1 e2) = case e1t of
-  S BOOL -> case e2t of
-    S BOOL -> S BOOL
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S BOOL) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Or e1 e2) = case e1t of
-  S BOOL -> case e2t of
-    S BOOL -> S BOOL
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S BOOL) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Ig e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S BOOL
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Leq e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S BOOL
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Seq e1 e2) = case e1t of
-  S VOID -> case e2t of
-    S VOID -> S VOID
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S VOID) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Atrib e1 e2) = case e1t of
-  S INT -> case e2t of
-    S INT -> S VOID
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(Catch e1 e2) = case e1t of
-  S VOID -> case e2t of
-    S VOID -> S VOID
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S VOID) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(While e1 e2) = case e1t of
-  S BOOL -> case e2t of
-    S VOID -> S VOID
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-iTipo' arg@(If e1 e2 e3) = case e1t of
-  S BOOL -> case e2t of
-    S VOID -> case e3t of
-      S VOID -> S VOID
-      E s -> E $ naExpressao s arg
-      otherwise -> E $ erroDeTipo e2 (S VOID) e3t arg 
-    E s -> E $ naExpressao s arg
-    otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
-  E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S BOOL) e1t arg
-  where
-    e1t = iTipo' e1
-    e2t = iTipo' e2
-    e3t = iTipo' e3
+    te = iTipo' e
+
