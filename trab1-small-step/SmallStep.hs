@@ -90,4 +90,12 @@ exemploC = (While (Not (Ig (Var "x") (Num 0)))
                   (Atrib (Var "x") (Sub (Var "x") (Num 1))))
 
 exemploErroTipo1 :: Exp
-exemploErroTipo1 = (While (Var "x") (Atrib (Var "x") (Sub (Var "x") (Num 1))))
+exemploErroTipo1 = (Atrib (Var "x") TRUE)
+
+exemploErroTipo2 :: Exp
+exemploErroTipo2 = (While (Var "x") (Atrib (Var "x") (Sub (Var "x") (Num 1))))
+
+exemploErroTipo3 :: Exp
+exemploErroTipo3 = (While (Not (Ig (Var "x") (Num 0)))
+                     (Sub (Var "x") (Som TRUE TRUE))
+                   )

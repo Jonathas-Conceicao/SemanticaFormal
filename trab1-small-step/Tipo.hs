@@ -57,7 +57,7 @@ erroDeTipo ex te tr outter = "Panico! Erro de tipo. \n" ++
   (show outter) ++ "\n"
 
 naExpressao :: String -> Exp -> String
-naExpressao s e = (s ++) $ "Na expressãoD " ++ (show e) ++ "\n"
+naExpressao s e = (s ++) $ "Na expressão " ++ (show e) ++ "\n"
 
 iTipo :: Exp -> Tipo
 iTipo e = getTipo $ iTipo' e
@@ -127,7 +127,7 @@ iTipo' arg@(Or e1 e2) = case e1t of
     e2t = iTipo' e2
 iTipo' arg@(Ig e1 e2) = case e1t of
   S INT -> case e2t of
-    S INT -> S INT
+    S INT -> S BOOL
     E s -> E $ naExpressao s arg
     otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
   E s -> E $ naExpressao s arg
@@ -137,7 +137,7 @@ iTipo' arg@(Ig e1 e2) = case e1t of
     e2t = iTipo' e2
 iTipo' arg@(Leq e1 e2) = case e1t of
   S INT -> case e2t of
-    S INT -> S INT
+    S INT -> S BOOL
     E s -> E $ naExpressao s arg
     otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
   E s -> E $ naExpressao s arg
@@ -157,11 +157,21 @@ iTipo' arg@(Seq e1 e2) = case e1t of
     e2t = iTipo' e2
 iTipo' arg@(Atrib e1 e2) = case e1t of
   S INT -> case e2t of
+    S INT -> S VOID
+    E s -> E $ naExpressao s arg
+    otherwise -> E $ erroDeTipo e2 (S INT) e2t arg
+  E s -> E $ naExpressao s arg
+  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
+  where
+    e1t = iTipo' e1
+    e2t = iTipo' e2
+iTipo' arg@(Catch e1 e2) = case e1t of
+  S VOID -> case e2t of
     S VOID -> S VOID
     E s -> E $ naExpressao s arg
     otherwise -> E $ erroDeTipo e2 (S VOID) e2t arg
   E s -> E $ naExpressao s arg
-  otherwise -> E $ erroDeTipo e1 (S INT) e1t arg
+  otherwise -> E $ erroDeTipo e1 (S VOID) e1t arg
   where
     e1t = iTipo' e1
     e2t = iTipo' e2
