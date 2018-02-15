@@ -1,6 +1,10 @@
-module Tipo where
-
-import Data.List as List
+module Tipo (
+  Exp(..),
+  Tipo(..),
+  isFinal,
+  iTipo
+)
+where
 
 data Exp
   = Num Int
@@ -57,7 +61,7 @@ instance Show Tipo' where
 
 getTipo :: Tipo' -> Tipo
 getTipo (S t) = t
-getTipo (E s) = errorWithoutStackTrace s
+getTipo (E s) = error s
 
 isError :: Tipo' -> Bool
 isError (E _) = True
